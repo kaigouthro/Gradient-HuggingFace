@@ -66,7 +66,7 @@ def training(config: GPTJConfig, session: TaskSession, pretrained, dataset):
         with timer("Loading HF pretrained model to IPU"):
             session.write_variables_data(hf_mapping_lm_tp(config, session, pretrained))
     else:
-        logging.info(f"Not loading a pretrained model.")
+        logging.info("Not loading a pretrained model.")
 
     lr_sch = session.session_state["lr_schedule"]
 
@@ -79,7 +79,9 @@ def training(config: GPTJConfig, session: TaskSession, pretrained, dataset):
     # Attach to device
     checkpoint_dir = config.checkpoint.save
     if checkpoint_dir is not None:
-        checkpoint_dir = os.path.join(checkpoint_dir, "Run_{}".format(datetime.now().strftime("%d_%m_%Y_%H_%M")))
+        checkpoint_dir = os.path.join(
+            checkpoint_dir, f'Run_{datetime.now().strftime("%d_%m_%Y_%H_%M")}'
+        )
 
     while True:
         # Training loop
@@ -88,7 +90,6 @@ def training(config: GPTJConfig, session: TaskSession, pretrained, dataset):
             start = time.perf_counter()
             saved_checkpoint = False
 
-            data_map = {}
             words = to_numpy(data["input_ids"], session.inputs.words.dtype, copy=False).reshape(
                 -1, *session.inputs.words.shape
             )
@@ -97,9 +98,14 @@ def training(config: GPTJConfig, session: TaskSession, pretrained, dataset):
             )
             lr = np.full((session.ir.num_host_transfers, replicas, 1), lr_schedule[step]).astype("float32").squeeze()
 
-            data_map[session.inputs.words] = tensor_parallel_input(
-                words, n_shards, replicas, partial(GPTJEmbeddingsTP.offset_input, config=config)
-            )
+            data_map = {
+                session.inputs.words: tensor_parallel_input(
+                    words,
+                    n_shards,
+                    replicas,
+                    partial(GPTJEmbeddingsTP.offset_input, config=config),
+                )
+            }
             data_map[session.inputs.labels] = tensor_parallel_input(
                 labels, n_shards, replicas, partial(GPTJLMHeadLossAndGradTP.offset_input, config=config)
             )

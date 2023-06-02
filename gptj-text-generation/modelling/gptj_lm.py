@@ -80,22 +80,27 @@ class GPTJLMHeadTP(addons.Module):
         x = self.ln_f(x)
         # sharded
         x = replicated_all_reduce_identical_inputs(x, group=self.replica_grouping.transpose())
-        logits = self.head(x)
-        return logits
+        return self.head(x)
 
     @staticmethod
     def hf_mapping(config: GPTJConfig, variables: NamedTensors, hf_model: HFModel) -> Dict[popxl.Tensor, np.ndarray]:
         dtype = config.model.dtype
         n_shards = config.execution.tensor_parallel
 
-        weights = {
-            variables.head.weight: shard(to_numpy(hf_model.lm_head.weight.data.T, dtype), n_shards, axis=-1),
-            variables.head.bias: shard(to_numpy(hf_model.lm_head.bias.data, dtype), n_shards, axis=-1),
-            variables.ln_f.weight: to_numpy(hf_model.transformer.ln_f.weight.data, dtype),
-            variables.ln_f.bias: to_numpy(hf_model.transformer.ln_f.bias.data, dtype),
+        return {
+            variables.head.weight: shard(
+                to_numpy(hf_model.lm_head.weight.data.T, dtype), n_shards, axis=-1
+            ),
+            variables.head.bias: shard(
+                to_numpy(hf_model.lm_head.bias.data, dtype), n_shards, axis=-1
+            ),
+            variables.ln_f.weight: to_numpy(
+                hf_model.transformer.ln_f.weight.data, dtype
+            ),
+            variables.ln_f.bias: to_numpy(
+                hf_model.transformer.ln_f.bias.data, dtype
+            ),
         }
-
-        return weights
 
     @staticmethod
     def to_hf(config: GPTJConfigHF, variables_data: NamedTensorData, hf_model: HFModel) -> Dict[str, "torch.Tensor"]:
@@ -104,10 +109,14 @@ class GPTJLMHeadTP(addons.Module):
         except ModuleNotFoundError:
             raise ModuleNotFoundError("PyTorch is not installed.")
 
-        state_dict = {}
-        state_dict["lm_head.weight"] = torch.tensor(
-            np.concatenate(variables_data.head.weight.transpose(0, 2, 1), axis=0), dtype=config.torch_dtype
-        )
+        state_dict = {
+            "lm_head.weight": torch.tensor(
+                np.concatenate(
+                    variables_data.head.weight.transpose(0, 2, 1), axis=0
+                ),
+                dtype=config.torch_dtype,
+            )
+        }
         state_dict["lm_head.bias"] = torch.tensor(
             np.concatenate(variables_data.head.bias, axis=0), dtype=config.torch_dtype
         )
@@ -143,10 +152,14 @@ class GPTJLMHeadModelTP(addons.Module):
     @staticmethod
     def to_hf(variables_data: NamedTensorData, hf_model: HFModel) -> Dict[str, torch.Tensor]:
         state_dict = {
-            "transformer." + k: v
-            for k, v in GPTJModelTP.to_hf(variables_data.transformer, hf_model.transformer, layer_norm=False).items()
+            f"transformer.{k}": v
+            for k, v in GPTJModelTP.to_hf(
+                variables_data.transformer, hf_model.transformer, layer_norm=False
+            ).items()
         }
-        state_dict.update(GPTJLMHeadTP.to_hf(hf_model.config, variables_data.lm_head, hf_model.lm_head))
+        state_dict |= GPTJLMHeadTP.to_hf(
+            hf_model.config, variables_data.lm_head, hf_model.lm_head
+        )
         return state_dict
 
 

@@ -85,7 +85,10 @@ def preprocess_packed_qa(
                 while sequence_ids[token_end_index] != (1 if pad_on_right else 0):
                     token_end_index -= 1
                 # Detect if the answer is out of the span (in which case this feature is labeled with the CLS index).
-                if not (offsets[token_start_index][0] <= start_char and offsets[token_end_index][1] >= end_char):
+                if (
+                    offsets[token_start_index][0] > start_char
+                    or offsets[token_end_index][1] < end_char
+                ):
                     start_positions.append(cls_index)
                     end_positions.append(cls_index)
                 else:
@@ -100,8 +103,6 @@ def preprocess_packed_qa(
 
         tokenized_dataset["start_positions"] = start_positions
         tokenized_dataset["end_positions"] = end_positions
-
-        return Dataset.from_dict(tokenized_dataset)
 
     else:
         # We keep the example_id that gave us this feature and we will store the offset mappings.
@@ -120,11 +121,12 @@ def preprocess_packed_qa(
             # Set to 0 the offset_mapping that are not part of the context so it's easy to determine if a token
             # position is part of the context or not.
             tokenized_dataset["offset_mapping"][i] = [
-                (o if sequence_ids[k] == context_index else tuple((0, 0)))
+                o if sequence_ids[k] == context_index else (0, 0)
                 for k, o in enumerate(tokenized_dataset["offset_mapping"][i])
             ]
 
-        return Dataset.from_dict(tokenized_dataset)
+
+    return Dataset.from_dict(tokenized_dataset)
 
 
 def postprocess_packed_qa_predictions(
@@ -226,7 +228,7 @@ def postprocess_packed_qa_predictions(
                         }
                     )
 
-        if len(valid_answers) > 0:
+        if valid_answers:
             best_answer = sorted(valid_answers, key=lambda x: x["score"], reverse=True)[0]
         else:
             # In the very rare edge case we have not a single non-null prediction, we create a fake prediction to avoid

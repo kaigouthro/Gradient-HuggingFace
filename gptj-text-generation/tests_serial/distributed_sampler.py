@@ -67,15 +67,12 @@ def distributed_sampler():
     for epoch in range(epochs):
         # set epoch explicitly before iterating dl
         sampler.set_epoch(epoch)
-        step = 0
-        for data in dl:
+        for step, data in enumerate(dl):
             x = data
             with session:
                 out = session.run({in_stream: x})[out_stream]
                 if step == 0:
                     epochs_first_data.append(out)
-            step += 1
-
     assert len(epochs_first_data) == epochs, f"Expected {epochs} elements to compare, found {len(epochs_first_data)}"
     # check each epoch data is sampled in different order
     for first_item in epochs_first_data[1:]:

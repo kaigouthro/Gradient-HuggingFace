@@ -56,8 +56,7 @@ class DollyLMHeadTP(addons.Module):
 
     def build(self, x: popxl.Tensor) -> popxl.Tensor:
         x = self.ln_f(x)
-        logits = self.head(x)
-        return logits
+        return self.head(x)
 
     @staticmethod
     def hf_mapping(config: DollyConfig, variables: NamedTensors, hf_model: HFModel) -> Dict[popxl.Tensor, np.ndarray]:

@@ -33,9 +33,7 @@ def default_dolly_prompt():
     RESPONSE_KEY = "### Response:"
     INTRO_BLURB = "The instruction below describes a task. Write a response that appropriately completes the request."
 
-    # This is the prompt that is used for generating responses using an already-trained model. It ends with the response
-    # key, where the job of the model is to provide the completion that follows it (which means the response itself).
-    format_str = dedent(
+    return dedent(
         """\
     {intro}
     {instruction_key}
@@ -48,7 +46,6 @@ def default_dolly_prompt():
         instruction="{instruction}",
         response_key=RESPONSE_KEY,
     )
-    return format_str
 
 
 def format_prompts(prompt: Union[str, List[str]], format_str: str):
@@ -103,7 +100,7 @@ class DollyPipeline:
         if micro_batch_size is not None:
             config.execution.micro_batch_size = micro_batch_size
         self.task = "text-generation"
-        logging.info(f"Creating session")
+        logging.info("Creating session")
         session: popxl.Session = inference(config)
         if isinstance(hf_dolly_checkpoint, str):
             logging.info(f"Downloading '{hf_dolly_checkpoint}' pretrained weights")

@@ -67,16 +67,15 @@ class DollyEmbeddingsTP(addons.Module):
     def get_offsets(config: DollyConfig) -> np.ndarray:
         n_shards = config.execution.tensor_parallel
 
-        word_offsets = Embedding.get_offsets(config.model.embedding.vocab_size, n_shards)
-        return word_offsets
+        return Embedding.get_offsets(config.model.embedding.vocab_size, n_shards)
 
     @staticmethod
     def get_vocab_shard_sizes(config: DollyConfig) -> int:
         n_shards = config.execution.tensor_parallel
 
-        word_shard_size = Embedding.get_vocab_shard_size(config.model.embedding.vocab_size, n_shards)
-
-        return word_shard_size
+        return Embedding.get_vocab_shard_size(
+            config.model.embedding.vocab_size, n_shards
+        )
 
     @staticmethod
     def _offset_input(data: HostTensor, offsets: HostTensor, n_shards, axis: int = 0):
@@ -94,8 +93,7 @@ class DollyEmbeddingsTP(addons.Module):
         n_shards = config.execution.tensor_parallel
         word_offsets = DollyEmbeddingsTP.get_offsets(config)
 
-        words_offsetted = cls._offset_input(words, word_offsets, n_shards, axis)
-        return words_offsetted
+        return cls._offset_input(words, word_offsets, n_shards, axis)
 
     @staticmethod
     def offset_input(data: np.ndarray, i: int, config: DollyConfig):

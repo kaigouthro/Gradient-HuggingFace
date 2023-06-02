@@ -96,10 +96,15 @@ class GPTJFeedForwardTP(addons.Module):
             hf_model.load_state_dict(state_dict)
             hf_model.to(device)
         """
-        state_dict = {}
-        state_dict["fc_in.weight"] = torch.tensor(
-            np.concatenate(popxl_state_dict.intermediate.weight.transpose((0, 2, 1)), axis=0), dtype=config.torch_dtype
-        )
+        state_dict = {
+            "fc_in.weight": torch.tensor(
+                np.concatenate(
+                    popxl_state_dict.intermediate.weight.transpose((0, 2, 1)),
+                    axis=0,
+                ),
+                dtype=config.torch_dtype,
+            )
+        }
         state_dict["fc_in.bias"] = torch.tensor(
             np.concatenate(popxl_state_dict.intermediate.bias, axis=0), dtype=config.torch_dtype
         )

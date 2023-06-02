@@ -49,7 +49,9 @@ class DollyDecoderBlockTP(addons.Module):
             variables.ln_2.weight: to_numpy(hf_model.post_attention_layernorm.weight.data, dtype),
             variables.ln_2.bias: to_numpy(hf_model.post_attention_layernorm.bias.data, dtype),
         }
-        weights.update(DollySelfAttentionTP.hf_mapping(config, variables.attention, hf_model.attention))
+        weights |= DollySelfAttentionTP.hf_mapping(
+            config, variables.attention, hf_model.attention
+        )
         weights.update(DollyFeedForwardTP.hf_mapping(config, variables.feed_forward, hf_model.mlp))
 
         return weights

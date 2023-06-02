@@ -59,7 +59,9 @@ class GPTJDecoderBlockTP(addons.Module):
             variables.ln_1.weight: to_numpy(hf_model.ln_1.weight.data, dtype),
             variables.ln_1.bias: to_numpy(hf_model.ln_1.bias.data, dtype),
         }
-        weights.update(GPTJSelfAttentionTP.hf_mapping(config, variables.attention, hf_model.attn))
+        weights |= GPTJSelfAttentionTP.hf_mapping(
+            config, variables.attention, hf_model.attn
+        )
         weights.update(GPTJFeedForwardTP.hf_mapping(config, variables.feed_forward, hf_model.mlp))
 
         return weights
@@ -68,11 +70,14 @@ class GPTJDecoderBlockTP(addons.Module):
     def to_hf(config: GPTJConfigHF, variables_data: NamedTensorData, hf_model: HFModel) -> Dict[str, torch.Tensor]:
         attn = GPTJSelfAttentionTP.to_hf(config, variables_data.attention, hf_model.attn)
         mlp = GPTJFeedForwardTP.to_hf(config, variables_data.feed_forward, hf_model.mlp)
-        state_dict = {}
-        state_dict["ln_1.weight"] = torch.tensor(variables_data.ln_1.weight, dtype=config.torch_dtype)
+        state_dict = {
+            "ln_1.weight": torch.tensor(
+                variables_data.ln_1.weight, dtype=config.torch_dtype
+            )
+        }
         state_dict["ln_1.bias"] = torch.tensor(variables_data.ln_1.bias, dtype=config.torch_dtype)
-        state_dict.update({"attn." + k: v for k, v in attn.items()})
-        state_dict.update({"mlp." + k: v for k, v in mlp.items()})
+        state_dict |= {f"attn.{k}": v for k, v in attn.items()}
+        state_dict |= {f"mlp.{k}": v for k, v in mlp.items()}
         return state_dict
 
 

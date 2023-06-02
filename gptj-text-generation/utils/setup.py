@@ -74,7 +74,7 @@ def gptj_config_setup(
                 "--wandb", default="True", choices=["False", "True"], help="Initialise Weights and Biases"
             )
         # needed for jupyter notebooks
-        parser.add_argument("-f", type=str, default="", help=f"jupyter")
+        parser.add_argument("-f", type=str, default="", help="jupyter")
 
     config, args = parse_args_with_presets(GPTJConfig, config_file, presets_key, default, custom_args, CLI_args)
     config: GPTJConfig  # type: ignore
@@ -149,7 +149,7 @@ def xl_hf_config_check(config: GPTJConfig, hf_config: HFConfig):
         ("vocab_size", config.model.embedding.vocab_size, hf_config.vocab_size),
         ("rotary_dim", config.model.attention.rotary_dim, hf_config.rotary_dim),
     ]
-    if not all(xl == hf for _, xl, hf in params):
+    if any(xl != hf for _, xl, hf in params):
         not_eq_str = ", ".join(f"\n`{name}` not equal, config: {xl}, hf: {hf}" for name, xl, hf in params if xl != hf)
         raise ValueError(f"Config does not match the Hugging Face (hf) pre-trained model. Not matching: {not_eq_str}")
 

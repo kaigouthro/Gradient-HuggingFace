@@ -46,13 +46,8 @@ def test_epochs():
     )
 
     epoch_first_element = []
-    for epoch in range(epochs):
-        step = 0
-        for x in dl:
-            if step == 0:
-                epoch_first_element.append(x.numpy())
-            step += 1
-
+    for _ in range(epochs):
+        epoch_first_element.extend(x.numpy() for step, x in enumerate(dl) if step == 0)
     for first_sample in epoch_first_element[1:]:
         not np.all(epoch_first_element[0] == first_sample)
 
@@ -82,12 +77,10 @@ def test_dataloader_checkpoints():
     )
     full_sampled_elements = []
     for epoch in range(epochs):
-        step = 0
         epoch_samples = []
         print(f"epoch {epoch}\n")
         for x in dl:
             print(x.numpy())
-            step += 1
             epoch_samples.append(x.numpy().astype(np.float32))
         full_sampled_elements.append(epoch_samples)
 
@@ -158,7 +151,7 @@ def test_dataloader_checkpoints():
             sampled_elements.append(epoch_samples)
 
     np.testing.assert_allclose(full_sampled_elements, sampled_elements, 10e-7)
-    os.remove(os.path.join(test_dir, f"dataloader_state.bin"))
+    os.remove(os.path.join(test_dir, "dataloader_state.bin"))
 
 
 if __name__ == "__main__":

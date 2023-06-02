@@ -52,7 +52,7 @@ class GPTJModelTP(addons.Module):
                 variables.ln_f.bias: to_numpy(hf_model.ln_f.bias.data, dtype),
             }
 
-        weights.update(GPTJEmbeddingsTP.hf_mapping(config, variables.embeddings, hf_model))
+        weights |= GPTJEmbeddingsTP.hf_mapping(config, variables.embeddings, hf_model)
 
         for l in range(config.model.layers):
             weights.update(GPTJDecoderBlockTP.hf_mapping(config, variables.decoder[l], hf_model.h[l]))
@@ -66,11 +66,13 @@ class GPTJModelTP(addons.Module):
             state_dict["ln_f.weight"] = torch.tensor(variables_data.ln_f.weight, dtype=hf_model.config.torch_dtype)
             state_dict["ln_f.bias"] = torch.tensor(variables_data.ln_f.bias, dtype=hf_model.config.torch_dtype)
 
-        state_dict.update(GPTJEmbeddingsTP.to_hf(hf_model.config, variables_data.embeddings, hf_model.wte))
+        state_dict |= GPTJEmbeddingsTP.to_hf(
+            hf_model.config, variables_data.embeddings, hf_model.wte
+        )
         for l in range(hf_model.config.n_layer):
             state_dict.update(
                 {
-                    "h." + str(l) + "." + k: v
+                    f"h.{str(l)}.{k}": v
                     for k, v in GPTJDecoderBlockTP.to_hf(
                         hf_model.config, variables_data.decoder[l], hf_model.h[l]
                     ).items()

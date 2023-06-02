@@ -30,10 +30,9 @@ from utils.utils import tensor_parallel_input, warmup_schedule
 
 def generate_synthetic_data(config: GPTJConfig):
     words = np.random.randint(0, config.model.embedding.vocab_size, (config.model.sequence_length + 1,))
-    input_ids = words[0:-1]
+    input_ids = words[:-1]
     labels = words[1:]
-    data = {"input_ids": [input_ids], "labels": [labels]}
-    return data
+    return {"input_ids": [input_ids], "labels": [labels]}
 
 
 def overfit(config: GPTJConfig, session: TaskSession):
@@ -75,7 +74,6 @@ def overfit(config: GPTJConfig, session: TaskSession):
             for data in train_dl:
                 start = time.perf_counter()
 
-                data_map = {}
                 words = to_numpy(data["input_ids"], session.inputs.words.dtype, copy=False).reshape(
                     -1, *session.inputs.words.shape
                 )
@@ -85,9 +83,14 @@ def overfit(config: GPTJConfig, session: TaskSession):
                 lr = (
                     np.full((session.ir.num_host_transfers, replicas, 1), lr_schedule[step]).astype("float32").squeeze()
                 )
-                data_map[session.inputs.words] = tensor_parallel_input(
-                    words, n_shards, replicas, partial(GPTJEmbeddingsTP.offset_input, config=config)
-                )
+                data_map = {
+                    session.inputs.words: tensor_parallel_input(
+                        words,
+                        n_shards,
+                        replicas,
+                        partial(GPTJEmbeddingsTP.offset_input, config=config),
+                    )
+                }
                 data_map[session.inputs.labels] = tensor_parallel_input(
                     labels, n_shards, replicas, partial(GPTJLMHeadLossAndGradTP.offset_input, config=config)
                 )

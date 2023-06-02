@@ -25,8 +25,7 @@ def make_block(smi: str) -> str:
     mol = Chem.MolFromSmiles(smi)
     mol = Chem.AddHs(mol)
     AllChem.EmbedMolecule(mol)
-    mblock = Chem.MolToMolBlock(mol)
-    return mblock
+    return Chem.MolToMolBlock(mol)
 
 
 def render_mol(xyz: str):
@@ -41,8 +40,7 @@ def render_mol(xyz: str):
 
 def plot_3d_mol(smile: str):
     blk = make_block(smile)
-    view = render_mol(blk)
-    return view
+    return render_mol(blk)
 
 
 def report_molecule_classification(name: str, y_truth: bool, out: Optional[float], smile: str):
@@ -51,8 +49,17 @@ def report_molecule_classification(name: str, y_truth: bool, out: Optional[float
         ["BBBP:", f"{y_truth} (target) {Emoji.microscope}"],
     ]
     if out is not None:
-        table.append(["Prediction:", f"{bool(out > 0.5)} {Emoji.test_tube}"])
-        table.append(["Correct:", f"{Emoji.yes}" if bool(out > 0.5) == y_truth else f"{Emoji.no}"])
+        table.extend(
+            (
+                ["Prediction:", f"{out > 0.5} {Emoji.test_tube}"],
+                [
+                    "Correct:",
+                    f"{Emoji.yes}"
+                    if (out > 0.5) == y_truth
+                    else f"{Emoji.no}",
+                ],
+            )
+        )
     print(tabulate.tabulate(table, tablefmt="heavy_grid"))
 
     return plot_3d_mol(smile)
@@ -65,8 +72,16 @@ def report_molecule_regression(name: str, y_truth: float, out: Optional[float], 
     ]
     if out is not None:
         err = abs(y_truth - out)
-        table.append(["Prediction:", f"{out:.4f} {Emoji.test_tube}"])
-        table.append(["|err|:", f"{err:.4f} " + (f"{Emoji.ruler}" if err < 1.5 else f"{Emoji.warning}")])
+        table.extend(
+            (
+                ["Prediction:", f"{out:.4f} {Emoji.test_tube}"],
+                [
+                    "|err|:",
+                    f"{err:.4f} "
+                    + (f"{Emoji.ruler}" if err < 1.5 else f"{Emoji.warning}"),
+                ],
+            )
+        )
     print(tabulate.tabulate(table, tablefmt="heavy_grid"))
     return plot_3d_mol(smile)
 

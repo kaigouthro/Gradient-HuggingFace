@@ -61,7 +61,7 @@ def dolly_config_setup(
             )
 
         # needed for jupyter notebooks
-        parser.add_argument("-f", type=str, default="", help=f"jupyter")
+        parser.add_argument("-f", type=str, default="", help="jupyter")
 
     config, args = parse_args_with_presets(DollyConfig, config_file, presets_key, default, custom_args, CLI_args)
     config: DollyConfig  # type: ignore
@@ -123,6 +123,6 @@ def xl_hf_config_check(config: DollyConfig, hf_config: HFConfig):
             int(hf_config.hidden_size // hf_config.num_attention_heads * hf_config.rotary_pct),
         ),
     ]
-    if not all(xl == hf for _, xl, hf in params):
+    if any(xl != hf for _, xl, hf in params):
         not_eq_str = ", ".join(f"\n`{name}` not equal, config: {xl}, hf: {hf}" for name, xl, hf in params if xl != hf)
         raise ValueError(f"Config does not match the Hugging Face (hf) pre-trained model. Not matching: {not_eq_str}")
