@@ -163,10 +163,9 @@ class DollySelfAttentionTP(addons.Module):
 
         out_proj_w = to_numpy(hf_model.dense.weight.data.T, dtype)
 
-        weights = {
+        return {
             variables.heads.qkv.weight: qkv_weight.squeeze(),
             variables.heads.qkv.bias: qkv_bias.squeeze(),
             variables.output.weight: shard(out_proj_w, attn_tp, axis=0).squeeze(),
             variables.output_bias: to_numpy(hf_model.dense.bias.data, dtype),
         }
-        return weights

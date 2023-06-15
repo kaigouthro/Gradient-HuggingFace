@@ -88,7 +88,10 @@ def prepare_train_features(examples):
                 token_end_index -= 1
 
             # Detect if the answer is out of the span (in which case this feature is labeled with the CLS index).
-            if not (offsets[token_start_index][0] <= start_char and offsets[token_end_index][1] >= end_char):
+            if (
+                offsets[token_start_index][0] > start_char
+                or offsets[token_end_index][1] < end_char
+            ):
                 tokenized_examples["start_positions"].append(cls_index)
                 tokenized_examples["end_positions"].append(cls_index)
             else:
@@ -219,7 +222,7 @@ def postprocess_qa_predictions(
                         }
                     )
 
-        if len(valid_answers) > 0:
+        if valid_answers:
             best_answer = sorted(valid_answers, key=lambda x: x["score"], reverse=True)[0]
         else:
             # In the very rare edge case we have not a single non-null prediction, we create a fake prediction to avoid

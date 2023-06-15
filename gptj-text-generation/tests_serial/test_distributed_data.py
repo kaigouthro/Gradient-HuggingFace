@@ -10,15 +10,22 @@ root_dir = Path(__file__).parent.parent.resolve()
 
 
 def run_poprun_cmdline(poprun_args, cmdline_args, script):
-    cmd = ["poprun"]
-    cmd.extend([str(item) for sublist in poprun_args.items() for item in sublist if item != ""])
-    cmd.append("python3")
+    cmd = [
+        "poprun",
+        *[
+            str(item)
+            for sublist in poprun_args.items()
+            for item in sublist
+            if item != ""
+        ],
+        "python3",
+    ]
     cmd.append(script)
     cmd.extend([str(item) for sublist in cmdline_args.items() for item in sublist if item != ""])
     try:
         out = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=root_dir)
     except subprocess.CalledProcessError as e:
-        print(f"TEST FAILED")
+        print("TEST FAILED")
         print(f"stdout={e.stdout.decode('utf-8',errors='ignore')}")
         print(f"stderr={e.stderr.decode('utf-8',errors='ignore')}")
         raise

@@ -81,7 +81,7 @@ class GPTJPipeline(BasicPipeline):
         if output_length is not None:
             config.inference.output_length = output_length
 
-        logging.info(f"Creating session")
+        logging.info("Creating session")
         session: popxl.Session = inference(config)
         if isinstance(hf_gptj_checkpoint, str):
             logging.info(f"Downloading '{hf_gptj_checkpoint}' pretrained weights")
@@ -115,11 +115,15 @@ class GPTJPipeline(BasicPipeline):
     def next_token(self, inputs, lengths):
         tp = self.config.execution.tensor_parallel
         rf = self.config.execution.tensor_parallel * self.config.execution.data_parallel
-        data_map = {}
         words = to_numpy(inputs, self.session.inputs.words.dtype).reshape(-1, *self.session.inputs.words.shape)
-        data_map[self.session.inputs.words] = tensor_parallel_input(
-            words, tp, rf, partial(GPTJEmbeddingsTP.offset_input, config=self.config)
-        ).squeeze()
+        data_map = {
+            self.session.inputs.words: tensor_parallel_input(
+                words,
+                tp,
+                rf,
+                partial(GPTJEmbeddingsTP.offset_input, config=self.config),
+            ).squeeze()
+        }
         data_map[self.session.inputs.last_token_indices] = repeat(lengths - 1, tp, axis=0)
         # identical for all tp, take first
         next_token_id = self.session.run(data_map)[self.session.outputs.next_token][0]
@@ -250,8 +254,7 @@ class GPTJEntailmentPipeline(GPTJPipeline):
         processed = []
         for generated in self.raw_out:
             first_line = generated.splitlines()[0].strip()
-            has_eos = find_eos.search(first_line)
-            if has_eos:
+            if has_eos := find_eos.search(first_line):
                 processed.append(first_line[: has_eos.start()])
             else:
                 processed.append(first_line)

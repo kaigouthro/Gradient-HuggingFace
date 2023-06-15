@@ -117,10 +117,14 @@ def LPFHP(histogram, max_sequence_length, max_sequences_per_pack, distribute=Tru
     n_strategies = len(strategy_set)
     old_number_of_samples = histogram.sum()
     new_number_of_samples = strategy_repeat_count.sum()
-    sequences = sum([count * len(pack) for count, pack in zip(strategy_repeat_count, strategy_set)])
+    sequences = sum(
+        count * len(pack)
+        for count, pack in zip(strategy_repeat_count, strategy_set)
+    )
     total_tokens = max_sequence_length * new_number_of_samples
     empty_tokens = sum(
-        [count * (max_sequence_length - sum(pack)) for count, pack in zip(strategy_repeat_count, strategy_set)]
+        count * (max_sequence_length - sum(pack))
+        for count, pack in zip(strategy_repeat_count, strategy_set)
     )
     efficiency = 100 - empty_tokens / total_tokens * 100
     speedup_upper_bound = 1.0 / (
@@ -203,10 +207,14 @@ def SPFHP(histogram: np.ndarray, max_sequence_length: int, max_sequences_per_pac
     n_strategies = len(strategy_set)
     old_number_of_samples = histogram.sum()
     new_number_of_samples = strategy_repeat_count.sum()
-    sequences = sum([count * len(pack) for count, pack in zip(strategy_repeat_count, strategy_set)])
+    sequences = sum(
+        count * len(pack)
+        for count, pack in zip(strategy_repeat_count, strategy_set)
+    )
     total_tokens = max_sequence_length * new_number_of_samples
     empty_tokens = sum(
-        [count * (max_sequence_length - sum(pack)) for count, pack in zip(strategy_repeat_count, strategy_set)]
+        count * (max_sequence_length - sum(pack))
+        for count, pack in zip(strategy_repeat_count, strategy_set)
     )
     efficiency = 100 - empty_tokens / total_tokens * 100
     speedup_upper_bound = 1.0 / (

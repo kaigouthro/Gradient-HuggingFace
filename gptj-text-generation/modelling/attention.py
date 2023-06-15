@@ -205,10 +205,12 @@ class GPTJSelfAttentionTP(addons.Module):
         # ignored keys in HF model: masked_bias and bias
         # bias is the attention mask
         # masked bias is the constant used to translate to infinity (1e4)
-        state_dict = {}
-        state_dict["q_proj.weight"] = torch.tensor(
-            np.concatenate(q.transpose((0, 2, 1)), axis=0), dtype=config.torch_dtype
-        )
+        state_dict = {
+            "q_proj.weight": torch.tensor(
+                np.concatenate(q.transpose((0, 2, 1)), axis=0),
+                dtype=config.torch_dtype,
+            )
+        }
         state_dict["k_proj.weight"] = torch.tensor(
             np.concatenate(k.transpose((0, 2, 1)), axis=0), dtype=config.torch_dtype
         )

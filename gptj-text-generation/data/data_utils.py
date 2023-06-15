@@ -12,10 +12,10 @@ import os
 def expand_glob_files(files):
     result = []
     for filepath in files:
-        expanded = glob.glob(filepath)
-        if len(expanded) < 1:
+        if expanded := glob.glob(filepath):
+            result += expanded
+        else:
             raise FileNotFoundError(f"Could not find file: {filepath}")
-        result += expanded
     return result
 
 
@@ -53,7 +53,7 @@ class DistributedSampler(torch.utils.data.DistributedSampler):
             rank = popdist.getInstanceIndex()
         if rank >= num_instances or rank < 0:
             raise ValueError(
-                "Invalid rank {}, rank should be in the interval" " [0, {}]".format(rank, num_instances - 1)
+                f"Invalid rank {rank}, rank should be in the interval [0, {num_instances - 1}]"
             )
 
         self.dataset = dataset

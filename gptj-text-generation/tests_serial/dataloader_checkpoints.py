@@ -55,12 +55,8 @@ def dataloader_checkpoints_popdist():
         persistent_workers=workers > 0,
     )
     full_sampled_elements = []
-    for epoch in range(epochs):
-        step = 0
-        epoch_samples = []
-        for x in dl:
-            step += 1
-            epoch_samples.append(x.numpy().astype(np.float32))
+    for _ in range(epochs):
+        epoch_samples = [x.numpy().astype(np.float32) for x in dl]
         full_sampled_elements.append(epoch_samples)
 
     # iterate dl, then interrupt iteration

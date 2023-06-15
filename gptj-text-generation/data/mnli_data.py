@@ -41,10 +41,7 @@ def extract_class_label(s: str) -> str:
     # no need if decoded using skip special tokens
     s = s.replace("<|endoftext|>", "")
     class_labels = ["entailment", "neutral", "contradiction"]
-    if s in class_labels:
-        return s
-    else:
-        return "unknown"
+    return s if s in class_labels else "unknown"
 
 
 def postprocess_mnli_predictions(generated_sentences):

@@ -49,7 +49,7 @@ class DollyModelTP(addons.Module):
                 variables.ln_f.bias: to_numpy(hf_model.final_layer_norm.bias.data, dtype),
             }
 
-        weights.update(DollyEmbeddingsTP.hf_mapping(config, variables.embeddings, hf_model))
+        weights |= DollyEmbeddingsTP.hf_mapping(config, variables.embeddings, hf_model)
 
         for l in range(config.model.layers):
             weights.update(DollyDecoderBlockTP.hf_mapping(config, variables.decoder[l], hf_model.layers[l]))

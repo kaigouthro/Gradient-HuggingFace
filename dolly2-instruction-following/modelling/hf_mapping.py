@@ -20,16 +20,14 @@ def hf_mapping_lm_tp(
     load_to = session.state
     if "fwd" in session.state:
         load_to = session.state.fwd
-    weights = DollyLMHeadModelTP.hf_mapping(config, load_to, pretrained)
-    return weights
+    return DollyLMHeadModelTP.hf_mapping(config, load_to, pretrained)
 
 
 def hf_mapping_TP(config: DollyConfig, session: TaskSession, pretrained: HFModel) -> Dict[popxl.Tensor, np.ndarray]:
     load_to = session.state
     if "fwd" in session.state:
         load_to = session.state.fwd
-    weights = DollyModelTP.hf_mapping(config, load_to, pretrained)
-    return weights
+    return DollyModelTP.hf_mapping(config, load_to, pretrained)
 
 
 def load_lm_to_hf(session: TaskSession, hf_model: HFLMHeadModel) -> HFLMHeadModel:

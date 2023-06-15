@@ -95,7 +95,7 @@ def warmup_schedule(total_steps: int, minimum: float, maximum: float, warmup_pro
     schedule = {}
     warmup_steps = int(total_steps * warmup_prop)
     if warmup_steps > 0:
-        schedule.update(_linear_schedule(0, warmup_steps, 1, minimum, maximum))
+        schedule |= _linear_schedule(0, warmup_steps, 1, minimum, maximum)
 
     schedule.update(_linear_schedule(warmup_steps, total_steps, 1, maximum, maximum))  # maximum to maximum so constant
     return schedule

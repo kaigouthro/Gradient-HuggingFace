@@ -80,12 +80,11 @@ class PackedDatasetCreator:
         # Verify num_labels if not inference
         if inference:
             logger.info("Inference mode has been set. This will override training/validation mode and ignore labels.")
-        else:
-            if num_labels == None:
-                logger.error(
-                    f'For validation (to evaluate) and training, num_labels must be passed to PackedDatasetCreator - num_labels got "None"!'
-                )
-                raise Exception
+        elif num_labels is None:
+            logger.error(
+                'For validation (to evaluate) and training, num_labels must be passed to PackedDatasetCreator - num_labels got "None"!'
+            )
+            raise Exception
 
         # Get the unpacked default data columns
         self.unpacked_input_ids = tokenized_dataset["input_ids"]
@@ -230,7 +229,10 @@ class PackedDatasetCreator:
                 )
                 position_ids_pack = list(
                     itertools.chain(
-                        *[range(skip_cls, len(self.unpacked_attention_mask[v])) for n, v in enumerate(inds)]
+                        *[
+                            range(skip_cls, len(self.unpacked_attention_mask[v]))
+                            for v in inds
+                        ]
                     )
                 )
 
@@ -287,7 +289,10 @@ class PackedDatasetCreator:
 
         print(f"Packed dataset creation time: {round(time.time()-st, 4)}s")
 
-        if self.problem_type == "single_label_classification" or self.problem_type == "multi_label_classification":
+        if self.problem_type in [
+            "single_label_classification",
+            "multi_label_classification",
+        ]:
             return PackedClassificationDataset(
                 input_ids=self.packed_input_ids,
                 attention_mask=self.packed_attention_mask,

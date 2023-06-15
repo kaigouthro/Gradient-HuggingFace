@@ -33,9 +33,9 @@ def create_overlays(source_dirs_exist_paths: List[str], target_dir: str) -> None
 
     Path(target_dir).mkdir(parents=True, exist_ok=True)
 
-    workdir = Path("/fusedoverlay/workdirs" + source_dirs_exist_paths[0])
+    workdir = Path(f"/fusedoverlay/workdirs{source_dirs_exist_paths[0]}")
     workdir.mkdir(parents=True, exist_ok=True)
-    upperdir = Path("/fusedoverlay/upperdir" + source_dirs_exist_paths[0]) 
+    upperdir = Path(f"/fusedoverlay/upperdir{source_dirs_exist_paths[0]}")
     upperdir.mkdir(parents=True, exist_ok=True)
 
     lowerdirs = ":".join(source_dirs_exist_paths)
